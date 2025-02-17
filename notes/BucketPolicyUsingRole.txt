@@ -1,0 +1,22 @@
+{
+    "Version": "2012-10-17",
+    "Id": "S3TestPolicy",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::<bucket_name>/*"
+        },
+        {
+            "Sid": "AllowWriteFromEC2Role",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<aws_account_id>:role/<ec2_role_name>"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::<bucket_name>/*"
+        }
+    ]
+}
