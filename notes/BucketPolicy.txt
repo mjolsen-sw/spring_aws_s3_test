@@ -20,6 +20,18 @@
                     "aws:SourceIp": "<ip_address>/32"
                 }
             }
+        },
+        {
+            "Sid": "AllowDeleteFromIP",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:DeleteObject",
+            "Resource": "arn:aws:s3:::<bucket_name>/*",
+            "Condition": {
+                "IpAddress": {
+                    "aws:SourceIp": "<ip_address>/32"
+                }
+            }
         }
     ]
 }

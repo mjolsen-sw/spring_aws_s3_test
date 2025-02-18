@@ -17,6 +17,15 @@
             },
             "Action": "s3:PutObject",
             "Resource": "arn:aws:s3:::<bucket_name>/*"
+        },
+        {
+            "Sid": "AllowDeleteFromEC2Role",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<aws_account_id>:role/<ec2_role_name>"
+            },
+            "Action": "s3:DeleteObject",
+            "Resource": "arn:aws:s3::<bucket_name>/*",
         }
     ]
 }

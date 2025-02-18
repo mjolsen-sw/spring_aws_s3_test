@@ -21,8 +21,18 @@ public class ModelController {
         return modelService.createModel(modelDTO);
     }
 
+    @DeleteMapping("/{modelId}")
+    public ModelDTO deleteModel(@PathVariable Long modelId) {
+        return modelService.deleteModel(modelId);
+    }
+
     @PutMapping("/image/{modelId}")
     public ModelDTO uploadImage(@PathVariable Long modelId, @RequestBody MultipartFile image) {
         return modelService.updateImage(modelId, image);
+    }
+
+    @DeleteMapping("/image/{modelId}")
+    public ModelDTO deleteImage(@PathVariable Long modelId) {
+        return modelService.deleteImage(modelId);
     }
 }

@@ -11,6 +11,4 @@ public class ModelDTO {
     private Long id;
     private String name;
     private String url;
-    private String bucket;
-    private String key;
 }
