@@ -3,11 +3,16 @@
     "Id": "S3TestPolicy",
     "Statement": [
         {
-            "Sid": "PublicReadGetObject",
+            "Sid": "AllowReadFromIP",
             "Effect": "Allow",
             "Principal": "*",
             "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::<bucket_name>/*"
+            "Resource": "arn:aws:s3:::<bucket_name>/*",
+            "Condition": {
+                "IpAddress": {
+                    "aws:SourceIp": "<ip_address>/32"
+                }
+            }
         },
         {
             "Sid": "AllowWriteFromIP",

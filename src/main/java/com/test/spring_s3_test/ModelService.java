@@ -5,17 +5,19 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -69,12 +71,44 @@ public class ModelService {
         return modelMapper.map(model, ModelDTO.class);
     }
 
+    public Optional<ImageDTO> getImage(Long modelId) {
+        Model model = modelRepository.findById(modelId)
+                .orElseThrow(() -> new RuntimeException("Model not found"));
+
+        try (S3Client s3Client = S3Client.create()) {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(model.getBucket())
+                    .key(model.getKey())
+                    .build();
+
+            byte[] responseBytes = s3Client.getObjectAsBytes(getObjectRequest)
+                    .asByteArray();
+
+            String contentType = tika.detect(responseBytes);
+            MediaType mediaType = MediaType.parseMediaType(contentType);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(mediaType);
+
+            return Optional.of(new ImageDTO(responseBytes, headers));
+        } catch (NoSuchKeyException e) {
+            logger.error("File not found in S3: {}", e.getMessage());
+        } catch (S3Exception e) {
+            logger.error("Error accessing S3 while getting: {}", e.getMessage());
+        } catch (SdkClientException e) {
+            logger.error("AWS client error while getting: {}", e.getMessage());
+        } catch (Exception e) {
+            logger.error("Unexpected error while getting: {}", e.getMessage());
+        }
+
+        return Optional.empty();
+    }
+
     public ModelDTO updateImage(Long modelId, MultipartFile image) {
         Model model = modelRepository.findById(modelId)
                 .orElseThrow(() -> new RuntimeException("Model not found"));
 
         if (isNotImageFile(image)) {
-            throw new RuntimeException("File is not an image");
+            throw new RuntimeException("No image file found");
         }
 
         boolean urlChanged = false;
@@ -140,7 +174,7 @@ public class ModelService {
     }
 
     private boolean isNotImageFile(MultipartFile file) {
-        if (file.isEmpty()) {
+        if (file == null || file.isEmpty()) {
             return true;
         }
 
